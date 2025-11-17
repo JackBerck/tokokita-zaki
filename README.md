@@ -12,23 +12,23 @@ Shift: E (Lama)/B (Baru)
 ## Screenshot dan Penjelasan
 
 ### 1. Halaman Login
-![Login Page](screenshots/login.png)  
+![Login Page](screenshots/login.jpg)  
 Halaman ini digunakan untuk login ke aplikasi. Terdapat dua input: email dan password. Setelah validasi berhasil, pengguna diarahkan ke halaman daftar produk.
 
 ### 2. Halaman Registrasi
-![Registrasi Page](screenshots/registrasi.png)  
+![Registrasi Page](screenshots/registrasi.jpg)  
 Halaman ini digunakan untuk registrasi pengguna baru. Terdapat empat input: nama, email, password, dan konfirmasi password. Validasi dilakukan untuk memastikan data yang dimasukkan sesuai.
 
 ### 3. Halaman Daftar Produk
-![List Produk Page](screenshots/produk_list.png)  
+![List Produk Page](screenshots/produk_list.jpg)  
 Halaman ini menampilkan daftar produk yang tersedia. Pengguna dapat menambah produk baru dengan menekan tombol "+" di pojok kanan atas. Setiap produk dapat dilihat detailnya dengan menekan item produk.
 
 ### 4. Halaman Form Produk
-![Form Produk Page](screenshots/produk_form.png)  
+![Form Produk Page](screenshots/produk_form.jpg)  
 Halaman ini digunakan untuk menambah atau mengubah produk. Terdapat tiga input: kode produk, nama produk, dan harga. Setelah data disimpan, produk akan ditambahkan atau diperbarui di daftar produk.
 
 ### 5. Halaman Detail Produk
-![Detail Produk Page](screenshots/produk_detail.png)  
+![Detail Produk Page](screenshots/produk_detail.jpg)  
 Halaman ini menampilkan detail produk seperti kode, nama, dan harga. Terdapat dua tombol: "EDIT" untuk mengubah produk dan "DELETE" untuk menghapus produk.
 
 ---
