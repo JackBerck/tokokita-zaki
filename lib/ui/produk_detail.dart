@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita/bloc/produk_bloc.dart';
 import 'package:tokokita/model/produk.dart';
 import 'package:tokokita/ui/produk_form.dart';
+import 'package:tokokita/ui/produk_page.dart';
+import 'package:tokokita/widget/warning_dialog.dart';
 
 class ProdukDetail extends StatefulWidget {
   final Produk produk;
@@ -22,18 +25,25 @@ class _ProdukDetailState extends State<ProdukDetail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detail Produk Zaki'),
-      ),
+      appBar: AppBar(title: const Text('Detail Produk Zaki')),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("Kode : ${_produk.kodeProduk}", style: const TextStyle(fontSize: 20.0)),
+            Text(
+              "Kode : ${_produk.kodeProduk}",
+              style: const TextStyle(fontSize: 20.0),
+            ),
             const SizedBox(height: 8),
-            Text("Nama : ${_produk.namaProduk}", style: const TextStyle(fontSize: 18.0)),
+            Text(
+              "Nama : ${_produk.namaProduk}",
+              style: const TextStyle(fontSize: 18.0),
+            ),
             const SizedBox(height: 8),
-            Text("Harga : Rp. ${_produk.hargaProduk}", style: const TextStyle(fontSize: 18.0)),
+            Text(
+              "Harga : Rp. ${_produk.hargaProduk}",
+              style: const TextStyle(fontSize: 18.0),
+            ),
             const SizedBox(height: 16),
             _tombolHapusEdit(),
           ],
@@ -51,7 +61,9 @@ class _ProdukDetailState extends State<ProdukDetail> {
           onPressed: () async {
             final result = await Navigator.push<Produk>(
               context,
-              MaterialPageRoute(builder: (context) => ProdukForm(produk: _produk)),
+              MaterialPageRoute(
+                builder: (context) => ProdukForm(produk: _produk),
+              ),
             );
             if (result != null) {
               setState(() {
@@ -63,37 +75,43 @@ class _ProdukDetailState extends State<ProdukDetail> {
           },
         ),
         const SizedBox(width: 8),
-        OutlinedButton(
-          child: const Text("DELETE"),
-          onPressed: _confirmHapus,
-        ),
+        OutlinedButton(child: const Text("DELETE"), onPressed: confirmHapus),
       ],
     );
   }
 
-  Future<void> _confirmHapus() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: const Text("Yakin ingin menghapus data ini?"),
-        actions: [
-          TextButton(
-            child: const Text("Ya"),
-            onPressed: () => Navigator.of(context).pop(true),
-          ),
-          TextButton(
-            child: const Text("Batal"),
-            onPressed: () => Navigator.of(context).pop(false),
-          ),
-        ],
-      ),
-    );
+  void confirmHapus() {
+    AlertDialog alertDialog = AlertDialog(
+      content: const Text("Yakin ingin menghapus data ini?"),
+      actions: [
+        //tombol hapus
+        OutlinedButton(
+          child: const Text("Ya"),
+          onPressed: () {
+            ProdukBloc.deleteProduk(id: int.parse(widget.produk.id!)).then(
+              (value) => {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const ProdukPage()),
+                ),
+              },
+              onError: (error) {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) => const WarningDialog(
+                    description: "Hapus gagal, silahkan coba lagi",
+                  ),
+                );
+              },
+            );
+          },
+        ),
+        OutlinedButton(
+          child: const Text("Batal"),
 
-    if (confirm == true) {
-      // TODO: call deletion logic (repository/bloc) here.
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produk dihapus')));
-      Navigator.of(context).pop(true); // signal deletion to caller
-    }
+          onPressed: () => Navigator.pop(context),
+        ),
+      ],
+    );
+    showDialog(builder: (context) => alertDialog, context: context);
   }
 }

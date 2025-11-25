@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita/bloc/produk_bloc.dart';
 import 'package:tokokita/model/produk.dart';
+import 'package:tokokita/ui/produk_page.dart';
+import 'package:tokokita/widget/success_dialog.dart';
+import 'package:tokokita/widget/warning_dialog.dart';
 
 class ProdukForm extends StatefulWidget {
   final Produk? produk;
@@ -12,7 +16,7 @@ class ProdukForm extends StatefulWidget {
 class _ProdukFormState extends State<ProdukForm> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-  String judul = "TAMBAH PRODUK";
+  String judul = "TAMBAH PRODUK ZAKI";
   String tombolSubmit = "SIMPAN";
 
   final _kodeProdukTextboxController = TextEditingController();
@@ -22,19 +26,21 @@ class _ProdukFormState extends State<ProdukForm> {
   @override
   void initState() {
     super.initState();
-    _setupForUpdate();
+    isUpdate();
   }
 
-  void _setupForUpdate() {
-    final p = widget.produk;
-    if (p != null) {
-      judul = "UBAH PRODUK";
-      tombolSubmit = "UBAH";
-      _kodeProdukTextboxController.text = p.kodeProduk ?? '';
-      _namaProdukTextboxController.text = p.namaProduk ?? '';
-      _hargaProdukTextboxController.text = (p.hargaProduk ?? '').toString();
+  isUpdate() {
+    if (widget.produk != null) {
+      setState(() {
+        judul = "UBAH PRODUK ZAKI";
+        tombolSubmit = "UBAH";
+        _kodeProdukTextboxController.text = widget.produk!.kodeProduk!;
+        _namaProdukTextboxController.text = widget.produk!.namaProduk!;
+        _hargaProdukTextboxController.text = widget.produk!.hargaProduk
+            .toString();
+      });
     } else {
-      judul = "TAMBAH PRODUK";
+      judul = "TAMBAH PRODUK ZAKI";
       tombolSubmit = "SIMPAN";
     }
   }
@@ -50,7 +56,7 @@ class _ProdukFormState extends State<ProdukForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Tambah Produk Zaki")),
+      appBar: AppBar(title: Text(judul)),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -73,14 +79,13 @@ class _ProdukFormState extends State<ProdukForm> {
     );
   }
 
-  // Membuat Textbox Kode Produk
   Widget _kodeProdukTextField() {
     return TextFormField(
       decoration: const InputDecoration(labelText: "Kode Produk"),
       keyboardType: TextInputType.text,
       controller: _kodeProdukTextboxController,
       validator: (value) {
-        if (value == null || value.trim().isEmpty) {
+        if (value == null || value.isEmpty) {
           return "Kode Produk harus diisi";
         }
         return null;
@@ -88,14 +93,13 @@ class _ProdukFormState extends State<ProdukForm> {
     );
   }
 
-  // Membuat Textbox Nama Produk
   Widget _namaProdukTextField() {
     return TextFormField(
       decoration: const InputDecoration(labelText: "Nama Produk"),
       keyboardType: TextInputType.text,
       controller: _namaProdukTextboxController,
       validator: (value) {
-        if (value == null || value.trim().isEmpty) {
+        if (value == null || value.isEmpty) {
           return "Nama Produk harus diisi";
         }
         return null;
@@ -103,30 +107,24 @@ class _ProdukFormState extends State<ProdukForm> {
     );
   }
 
-  // Membuat Textbox Harga Produk
   Widget _hargaProdukTextField() {
     return TextFormField(
       decoration: const InputDecoration(labelText: "Harga"),
       keyboardType: TextInputType.number,
       controller: _hargaProdukTextboxController,
       validator: (value) {
-        if (value == null || value.trim().isEmpty) {
+        if (value == null || value.isEmpty) {
           return "Harga harus diisi";
-        }
-        if (double.tryParse(value.replaceAll(',', '')) == null) {
-          return "Harga harus berupa angka";
         }
         return null;
       },
     );
   }
 
-  // Membuat Tombol Simpan/Ubah
   Widget _buttonSubmit() {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : _onSubmit,
         child: _isLoading
             ? const SizedBox(
                 height: 16,
@@ -137,45 +135,105 @@ class _ProdukFormState extends State<ProdukForm> {
                 ),
               )
             : Text(tombolSubmit),
+        onPressed: _isLoading
+            ? null
+            : () {
+                var validate = _formKey.currentState!.validate();
+                if (validate) {
+                  if (widget.produk != null) {
+                    ubah();
+                  } else {
+                    simpan();
+                  }
+                }
+              },
       ),
     );
   }
 
-  Future<void> _onSubmit() async {
-    final isValid = _formKey.currentState?.validate() ?? false;
-    if (!isValid) return;
-
-    setState(() => _isLoading = true);
-
-    // Prepare produk object (adjust fields/types according to your model)
-    final hargaParsed =
-        double.tryParse(
-          _hargaProdukTextboxController.text.replaceAll(',', ''),
-        ) ??
-        0;
-    final produk = Produk(
-      id: widget.produk?.id,
-      kodeProduk: _kodeProdukTextboxController.text.trim(),
-      namaProduk: _namaProdukTextboxController.text.trim(),
-      hargaProduk: hargaParsed,
+  simpan() {
+    setState(() {
+      _isLoading = true;
+    });
+    Produk createProduk = Produk(
+      id: null,
+      kodeProduk: _kodeProdukTextboxController.text,
+      namaProduk: _namaProdukTextboxController.text,
+      hargaProduk: double.parse(_hargaProdukTextboxController.text),
     );
 
-    // TODO: call your repository / bloc to save/update the produk.
-    // For now we simulate a network call and return the produk to caller.
-    await Future.delayed(const Duration(seconds: 1));
+    ProdukBloc.addProduk(produk: createProduk).then(
+      (value) {
+        setState(() {
+          _isLoading = false;
+        });
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => SuccessDialog(
+            description: "Produk berhasil disimpan",
+            okClick: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const ProdukPage()),
+              );
+            },
+          ),
+        );
+      },
+      onError: (error) {
+        setState(() {
+          _isLoading = false;
+        });
+        showDialog(
+          context: context,
+          builder: (BuildContext context) => const WarningDialog(
+            description: "Simpan gagal, silahkan coba lagi",
+          ),
+        );
+      },
+    );
+  }
 
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          widget.produk == null ? 'Produk disimpan' : 'Produk diubah',
-        ),
-      ),
+  ubah() {
+    setState(() {
+      _isLoading = true;
+    });
+    Produk updateProduk = Produk(
+      id: widget.produk!.id,
+      kodeProduk: _kodeProdukTextboxController.text,
+      namaProduk: _namaProdukTextboxController.text,
+      hargaProduk: double.parse(_hargaProdukTextboxController.text),
     );
 
-    setState(() => _isLoading = false);
-
-    // Return the created/updated product to previous screen
-    Navigator.of(context).pop(produk);
+    ProdukBloc.updateProduk(produk: updateProduk).then(
+      (value) {
+        setState(() {
+          _isLoading = false;
+        });
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => SuccessDialog(
+            description: "Produk berhasil diubah",
+            okClick: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const ProdukPage()),
+              );
+            },
+          ),
+        );
+      },
+      onError: (error) {
+        setState(() {
+          _isLoading = false;
+        });
+        showDialog(
+          context: context,
+          builder: (BuildContext context) => const WarningDialog(
+            description: "Permintaan ubah data gagal, silahkan coba lagi",
+          ),
+        );
+      },
+    );
   }
 }

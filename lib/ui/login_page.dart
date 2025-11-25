@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita/bloc/login_bloc.dart';
+import 'package:tokokita/helpers/user_info.dart';
 import 'package:tokokita/ui/produk_page.dart';
 import 'package:tokokita/ui/registrasi_page.dart';
+import 'package:tokokita/widget/warning_dialog.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -47,7 +50,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  //Membuat Textbox email
   Widget _emailTextField() {
     return TextFormField(
       decoration: const InputDecoration(labelText: "Email"),
@@ -62,7 +64,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  //Membuat Textbox password
   Widget _passwordTextField() {
     return TextFormField(
       decoration: const InputDecoration(labelText: "Password"),
@@ -78,33 +79,10 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  //Membuat Tombol Login
   Widget _buttonLogin() {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _isLoading
-            ? null
-            : () async {
-                setState(() {
-                  _isLoading = true;
-                });
-
-                final isValid = _formKey.currentState?.validate() ?? false;
-                if (isValid) {
-                  await Future.delayed(const Duration(seconds: 1));
-                  if (!mounted) return;
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => const ProdukPage()),
-                  );
-                }
-
-                if (mounted) {
-                  setState(() {
-                    _isLoading = false;
-                  });
-                }
-              },
         child: _isLoading
             ? const SizedBox(
                 height: 16,
@@ -115,11 +93,18 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               )
             : const Text("Login"),
+        onPressed: _isLoading
+            ? null
+            : () {
+                var validate = _formKey.currentState!.validate();
+                if (validate) {
+                  _submit();
+                }
+              },
       ),
     );
   }
 
-  // Membuat menu untuk membuka halaman registrasi
   Widget _menuRegistrasi() {
     return Center(
       child: InkWell(
@@ -131,6 +116,52 @@ class _LoginPageState extends State<LoginPage> {
           );
         },
       ),
+    );
+  }
+
+  void _submit() {
+    _formKey.currentState!.save();
+    setState(() {
+      _isLoading = true;
+    });
+    LoginBloc.login(
+      email: _emailTextboxController.text,
+      password: _passwordTextboxController.text,
+    ).then(
+      (value) async {
+        setState(() {
+          _isLoading = false;
+        });
+        if (value.code == 200) {
+          await UserInfo().setToken(value.token.toString());
+          await UserInfo().setUserID(int.parse(value.userID.toString()));
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ProdukPage()),
+          );
+        } else {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) => const WarningDialog(
+              description: "Login gagal, silahkan coba lagi",
+            ),
+          );
+        }
+      },
+      onError: (error) {
+        setState(() {
+          _isLoading = false;
+        });
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => const WarningDialog(
+            description: "Login gagal, silahkan coba lagi",
+          ),
+        );
+      },
     );
   }
 }

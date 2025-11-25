@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita/bloc/registrasi_bloc.dart';
+import 'package:tokokita/widget/success_dialog.dart';
+import 'package:tokokita/widget/warning_dialog.dart';
+import 'dart:developer'; // Tambahkan ini untuk logging
 
 class RegistrasiPage extends StatefulWidget {
   const RegistrasiPage({Key? key}) : super(key: key);
@@ -13,12 +17,14 @@ class _RegistrasiPageState extends State<RegistrasiPage> {
   final _namaTextboxController = TextEditingController();
   final _emailTextboxController = TextEditingController();
   final _passwordTextboxController = TextEditingController();
+  final _konfirmasiPasswordController = TextEditingController();
 
   @override
   void dispose() {
     _namaTextboxController.dispose();
     _emailTextboxController.dispose();
     _passwordTextboxController.dispose();
+    _konfirmasiPasswordController.dispose();
     super.dispose();
   }
 
@@ -32,7 +38,6 @@ class _RegistrasiPageState extends State<RegistrasiPage> {
           child: Form(
             key: _formKey,
             child: Column(
-              // mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _namaTextField(),
                 const SizedBox(height: 8),
@@ -51,7 +56,6 @@ class _RegistrasiPageState extends State<RegistrasiPage> {
     );
   }
 
-  //Membuat Textbox Nama
   Widget _namaTextField() {
     return TextFormField(
       decoration: const InputDecoration(labelText: "Nama"),
@@ -66,7 +70,6 @@ class _RegistrasiPageState extends State<RegistrasiPage> {
     );
   }
 
-  //Membuat Textbox email
   Widget _emailTextField() {
     return TextFormField(
       decoration: const InputDecoration(labelText: "Email"),
@@ -88,7 +91,6 @@ class _RegistrasiPageState extends State<RegistrasiPage> {
     );
   }
 
-  //Membuat Textbox password
   Widget _passwordTextField() {
     return TextFormField(
       decoration: const InputDecoration(labelText: "Password"),
@@ -104,12 +106,12 @@ class _RegistrasiPageState extends State<RegistrasiPage> {
     );
   }
 
-  //membuat textbox Konfirmasi Password
   Widget _passwordKonfirmasiTextField() {
     return TextFormField(
       decoration: const InputDecoration(labelText: "Konfirmasi Password"),
       keyboardType: TextInputType.text,
       obscureText: true,
+      controller: _konfirmasiPasswordController,
       validator: (value) {
         if (value == null || value != _passwordTextboxController.text) {
           return "Konfirmasi Password tidak sama";
@@ -119,7 +121,6 @@ class _RegistrasiPageState extends State<RegistrasiPage> {
     );
   }
 
-  //Membuat Tombol Registrasi
   Widget _buttonRegistrasi() {
     return SizedBox(
       width: double.infinity,
@@ -136,28 +137,54 @@ class _RegistrasiPageState extends State<RegistrasiPage> {
             : const Text("Registrasi"),
         onPressed: _isLoading
             ? null
-            : () async {
-                setState(() {
-                  _isLoading = true;
-                });
-
-                final isValid = _formKey.currentState?.validate() ?? false;
-                if (isValid) {
-                  // TODO: perform registration request here
-                  await Future.delayed(const Duration(seconds: 1));
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Registrasi berhasil')),
-                  );
-                }
-
-                if (mounted) {
-                  setState(() {
-                    _isLoading = false;
-                  });
+            : () {
+                var validate = _formKey.currentState!.validate();
+                if (validate) {
+                  _submit();
                 }
               },
       ),
+    );
+  }
+
+  void _submit() {
+    _formKey.currentState!.save();
+    setState(() {
+      _isLoading = true;
+    });
+    RegistrasiBloc.registrasi(
+      nama: _namaTextboxController.text,
+      email: _emailTextboxController.text,
+      password: _passwordTextboxController.text,
+    ).then(
+      (value) {
+        setState(() {
+          _isLoading = false;
+        });
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => SuccessDialog(
+            description: "Registrasi berhasil, silahkan login",
+            okClick: () {
+              Navigator.pop(context);
+            },
+          ),
+        );
+      },
+      onError: (error) {
+        setState(() {
+          _isLoading = false;
+        });
+        log('Registrasi error: $error'); // Logging error
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) => WarningDialog(
+            description: "Registrasi gagal, silahkan coba lagi\nError: $error",
+          ),
+        );
+      },
     );
   }
 }

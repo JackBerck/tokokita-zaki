@@ -1,90 +1,255 @@
 # tokokita
 
-Proyek ini adalah aplikasi Flutter sederhana untuk memenuhi tugas praktikum Pemrograman Mobile Shift E. Aplikasi ini memiliki fitur login, registrasi, dan pengelolaan produk (CRUD).
+Aplikasi Flutter sederhana untuk memenuhi tugas praktikum Pemrograman Mobile Shift E.  
+Fitur utama: **Login, Registrasi, dan CRUD Produk** terhubung ke REST API CodeIgniter 4.
 
 **Identitas:**  
 Nama: Muhammad Zaki Dzulfikar  
 NIM: H1D023065  
-Shift: E (Lama)/B (Baru)  
+Shift: E (KRS)/B(Sekarang)
 
 ---
 
-## Screenshot dan Penjelasan
+## Daftar Isi
 
-### 1. Halaman Login
-![Login Page](screenshots/login.jpg)  
-Halaman ini digunakan untuk login ke aplikasi. Terdapat dua input: email dan password. Setelah validasi berhasil, pengguna diarahkan ke halaman daftar produk.
+1. [Screenshot & Penjelasan Proses](#screenshot--penjelasan-proses)
+    - Proses Login
+    - Proses Registrasi
+    - Proses Tambah Produk
+    - Proses Lihat Detail Produk
+    - Proses Edit Produk
+    - Proses Hapus Produk
+2. [Penjelasan Kode](#penjelasan-kode)
+3. [Cara Menjalankan](#cara-menjalankan)
+4. [Struktur Proyek](#struktur-proyek)
 
-### 2. Halaman Registrasi
-![Registrasi Page](screenshots/registrasi.jpg)  
-Halaman ini digunakan untuk registrasi pengguna baru. Terdapat empat input: nama, email, password, dan konfirmasi password. Validasi dilakukan untuk memastikan data yang dimasukkan sesuai.
+---
 
-### 3. Halaman Daftar Produk
-![List Produk Page](screenshots/list-produk.jpg)  
-Halaman ini menampilkan daftar produk yang tersedia. Pengguna dapat menambah produk baru dengan menekan tombol "+" di pojok kanan atas. Setiap produk dapat dilihat detailnya dengan menekan item produk.
+## Screenshot & Penjelasan Proses
 
-### 4. Halaman Form Produk
-![Form Produk Page](screenshots/tambah-produk.jpg)  
-Halaman ini digunakan untuk menambah atau mengubah produk. Terdapat tiga input: kode produk, nama produk, dan harga. Setelah data disimpan, produk akan ditambahkan atau diperbarui di daftar produk.
+### 1. Proses Login
 
-### 5. Halaman Detail Produk
-![Detail Produk Page](screenshots/detail-produk.jpg)  
-Halaman ini menampilkan detail produk seperti kode, nama, dan harga. Terdapat dua tombol: "EDIT" untuk mengubah produk dan "DELETE" untuk menghapus produk.
+#### a. Form Login
+![Login Page](screenshots/login.png)  
+Pengguna mengisi email dan password, lalu klik tombol **Login**.
+
+#### b. Popup Berhasil/Gagal
+Jika login berhasil, pengguna diarahkan ke halaman produk.  
+Jika gagal, muncul popup seperti berikut:
+![Login Gagal](screenshots/login-gagal.png)
+
+**Kode Validasi Login:**
+```dart
+LoginBloc.login(
+  email: _emailTextboxController.text,
+  password: _passwordTextboxController.text,
+).then((value) async {
+  if (value.code == 200) {
+    // Simpan token, pindah ke ProdukPage
+  } else {
+    // Tampilkan WarningDialog
+  }
+}, onError: (error) {
+  // Tampilkan WarningDialog
+});
+```
+
+---
+
+### 2. Proses Registrasi
+
+#### a. Form Registrasi
+![Registrasi Page](screenshots/registrasi.png)  
+Pengguna mengisi nama, email, password, dan konfirmasi password, lalu klik **Registrasi**.
+
+#### b. Popup Berhasil/Gagal
+Jika registrasi berhasil, muncul popup sukses.  
+Jika gagal, muncul popup error dengan pesan detail.
+![Registrasi Gagal](screenshots/registrasi-gagal.png)
+
+**Kode Validasi Registrasi:**
+```dart
+RegistrasiBloc.registrasi(
+  nama: _namaTextboxController.text,
+  email: _emailTextboxController.text,
+  password: _passwordTextboxController.text,
+).then((value) {
+  // Tampilkan SuccessDialog
+}, onError: (error) {
+  // Tampilkan WarningDialog + log error
+});
+```
+
+---
+
+### 3. Proses Tambah Data Produk
+
+#### a. Form Tambah Produk
+![Form Tambah Produk Page](screenshots/tambah-produk.png)  
+Pengguna mengisi kode produk, nama produk, dan harga, lalu klik **Simpan**.
+
+#### b. Popup Berhasil/Gagal
+Jika berhasil, produk ditambahkan ke list dan muncul popup sukses.  
+Jika gagal, muncul popup error.
+
+**Kode Tambah Produk:**
+```dart
+Produk createProduk = Produk(
+  kodeProduk: _kodeProdukTextboxController.text,
+  namaProduk: _namaProdukTextboxController.text,
+  hargaProduk: double.parse(_hargaProdukTextboxController.text),
+);
+
+ProdukBloc.addProduk(produk: createProduk).then((value) {
+  // Tampilkan SuccessDialog
+}, onError: (error) {
+  // Tampilkan WarningDialog
+});
+```
+
+---
+
+### 4. Proses Lihat Detail Produk
+
+#### a. Tampilan Detail Produk
+![Detail Produk Page](screenshots/detail-produk.png)  
+Menampilkan kode, nama, dan harga produk. Terdapat tombol **EDIT** dan **DELETE**.
+
+**Kode Navigasi ke Detail:**
+```dart
+Navigator.push(
+  context,
+  MaterialPageRoute(builder: (context) => ProdukDetail(produk: produk)),
+);
+```
+
+---
+
+### 5. Proses Edit Produk
+
+#### a. Form Edit Produk
+![Form Ubah Produk Page](screenshots/ubah-produk.png)  
+Field otomatis terisi sesuai data produk yang dipilih. Pengguna dapat mengubah data lalu klik **Ubah**.
+
+#### b. Popup Berhasil/Gagal
+Jika berhasil, produk diupdate dan muncul popup sukses.  
+Jika gagal, muncul popup error.
+
+**Kode Edit Produk:**
+```dart
+ProdukBloc.updateProduk(produk: updateProduk).then((produkBaru) {
+  // Tampilkan SuccessDialog, kembali ke detail dengan produkBaru
+}, onError: (error) {
+  // Tampilkan WarningDialog
+});
+```
+
+---
+
+### 6. Proses Hapus Produk
+
+#### a. Konfirmasi Hapus
+![Hapus Produk Page](screenshots/hapus-produk.png)  
+Klik tombol **DELETE** akan memunculkan dialog konfirmasi.
+
+#### b. Popup Berhasil/Gagal
+Jika berhasil, produk dihapus dari list dan muncul popup sukses.  
+Jika gagal, muncul popup error.
+
+**Kode Hapus Produk:**
+```dart
+ProdukBloc.deleteProduk(id: produk.id).then((status) {
+  if (status) {
+    // Tampilkan SuccessDialog
+  } else {
+    // Tampilkan WarningDialog
+  }
+}, onError: (error) {
+  // Tampilkan WarningDialog
+});
+```
 
 ---
 
 ## Penjelasan Kode
 
-### 1. Halaman Login (`lib/ui/login_page.dart`)
-- **Fungsi:** Form login dengan validasi email dan password.
-- **Navigasi:** Setelah login berhasil, pengguna diarahkan ke halaman daftar produk (`ProdukPage`).
-- **Komponen Utama:** 
-  - TextFormField untuk email dan password.
-  - Tombol "Login" dengan progress indicator.
-  - Link ke halaman registrasi (`RegistrasiPage`).
+### 1. Struktur CRUD di Bloc
 
-### 2. Halaman Registrasi (`lib/ui/registrasi_page.dart`)
-- **Fungsi:** Form registrasi pengguna baru.
-- **Validasi:** 
-  - Nama minimal 3 karakter.
-  - Email harus valid (regex).
-  - Password minimal 6 karakter dan konfirmasi harus sama.
-- **Komponen Utama:** 
-  - TextFormField untuk nama, email, password, dan konfirmasi password.
-  - Tombol "Registrasi" dengan progress indicator.
+- **Tambah Produk:**  
+  Kirim data ke API dengan metode POST, parsing response, tampilkan hasil.
+- **Lihat Produk:**  
+  Ambil list produk dari API dengan GET, parsing ke model Produk.
+- **Edit Produk:**  
+  Kirim data ke API dengan PUT, parsing response, update tampilan.
+- **Hapus Produk:**  
+  Kirim request ke API dengan DELETE, parsing response, update list.
 
-### 3. Halaman Daftar Produk (`lib/ui/produk_page.dart`)
-- **Fungsi:** Menampilkan daftar produk.
-- **Navigasi:** 
-  - Tombol "+" membuka halaman form produk (`ProdukForm`) untuk menambah produk.
-  - Tap pada item produk membuka halaman detail produk (`ProdukDetail`).
-- **Komponen Utama:** 
-  - ListView untuk menampilkan daftar produk.
-  - Drawer sederhana dengan opsi logout (belum diimplementasikan).
+### 2. Model Produk
+```dart
+class Produk {
+  String? id;
+  String? kodeProduk;
+  String? namaProduk;
+  double? hargaProduk;
+  Produk({this.id, this.kodeProduk, this.namaProduk, this.hargaProduk});
+  factory Produk.fromJson(Map<String, dynamic> obj) {
+    return Produk(
+      id: obj['id'].toString(),
+      kodeProduk: obj['kode_produk'],
+      namaProduk: obj['nama_produk'],
+      hargaProduk: obj['harga'] != null
+          ? double.tryParse(obj['harga'].toString()) ?? 0
+          : 0,
+    );
+  }
+}
+```
 
-### 4. Halaman Form Produk (`lib/ui/produk_form.dart`)
-- **Fungsi:** Form untuk menambah atau mengubah produk.
-- **Validasi:** 
-  - Semua field wajib diisi.
-  - Harga harus berupa angka.
-- **Komponen Utama:** 
-  - TextFormField untuk kode produk, nama produk, dan harga.
-  - Tombol "Simpan/Ubah" dengan progress indicator.
-
-### 5. Halaman Detail Produk (`lib/ui/produk_detail.dart`)
-- **Fungsi:** Menampilkan detail produk.
-- **Navigasi:** 
-  - Tombol "EDIT" membuka halaman form produk (`ProdukForm`) untuk mengubah produk.
-  - Tombol "DELETE" menampilkan dialog konfirmasi untuk menghapus produk.
-- **Komponen Utama:** 
-  - Text untuk detail produk (kode, nama, harga).
-  - Tombol "EDIT" dan "DELETE".
+### 3. API Helper
+```dart
+class Api {
+  Future<dynamic> post(String url, dynamic data) async { ... }
+  Future<dynamic> get(String url) async { ... }
+  Future<dynamic> put(String url, dynamic data) async { ... }
+  Future<dynamic> delete(String url) async { ... }
+}
+```
 
 ---
 
 ## Cara Menjalankan
+
 1. Pastikan Flutter sudah terinstall.
-2. Jalankan perintah berikut di terminal:
+2. Pastikan backend CodeIgniter 4 sudah berjalan dan API bisa diakses.
+3. Jalankan perintah berikut di terminal:
    ```bash
    flutter pub get
    flutter run
+   ```
+4. Untuk Flutter Web, pastikan CORS backend sudah aktif.
+
+---
+
+## Struktur Proyek
+
+```
+lib/
+├── bloc/
+├── helpers/
+├── model/
+├── ui/
+├── widget/
+└── main.dart
+```
+
+---
+
+## Catatan
+
+- Semua proses CRUD sudah terhubung ke backend dan diuji.
+- Jika ada error, cek log backend dan response API.
+- Untuk pengembangan lebih lanjut, bisa tambahkan validasi, pagination, dan fitur pencarian produk.
+
+---
+
+**Tugas ini dibuat untuk memenuhi praktikum Pemrograman Mobile Shift E (KRS) Shift B(Sekarang).**
